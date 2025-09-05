@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>瞬間英作文ミニアプリ</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body { height: 100%; background: #0b0f16; }
+    .safe { padding-bottom: env(safe-area-inset-bottom); }
+    .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 tap-highlight-none">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-slate-900/80 backdrop-blur border-b border-slate-800">
+    <div class="max-w-md mx-auto px-4 py-3 flex items-center gap-3">
+      <div class="text-lg font-semibold">瞬間英作文</div>
+      <div id="progressText" class="ml-auto text-xs text-slate-300">0 / 0</div>
+    </div>
+    <div class="max-w-md mx-auto px-4 pb-2 flex gap-2">
+      <div class="w-full h-1.5 bg-slate-800 rounded-full">
+        <div id="progressBar" class="h-1.5 bg-indigo-500 rounded-full" style="width:0%"></div>
+      </div>
+      <button id="filterBtn" class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 text-xs">❌未習得のみ</button>
+      <button id="holdBtn" class="px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 text-xs">🤔保留リスト</button>
+    </div>
+  </header>
+
+  <!-- Main Card -->
+  <main class="max-w-md mx-auto p-4 pt-3">
+    <section id="card" class="safe bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
+      <div class="relative aspect-[4/3] w-full bg-slate-800">
+        <img id="image" alt="scene" class="w-full h-full object-cover" src=""/>
+        <div id="badge" class="absolute top-2 left-2 text-[10px] px-2 py-1 rounded-full bg-slate-900/70 border border-slate-700">#1</div>
+      </div>
+
+      <div class="p-4 space-y-3">
+        <p id="ja" class="text-base leading-relaxed"></p>
+
+        <div class="flex items-center gap-2">
+          <button id="revealBtn" class="flex-1 text-center px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">英語を表示</button>
+          <button id="audioBtn" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-800">音声</button>
+        </div>
+
+        <div id="enWrap" class="hidden border border-slate-800 rounded-xl p-3 bg-slate-900/60">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-slate-300 text-xs">正解例</div>
+          </div>
+          <p id="en" class="mt-1 text-lg leading-relaxed"></p>
+        </div>
+
+        <div id="feedback" class="text-sm"></div>
+
+        <!-- Buttons: 覚えた / 覚えてない / 保留 -->
+        <div class="flex items-center gap-2 pt-2">
+          <button id="notBtn" class="flex-1 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500">❌ 覚えてない</button>
+          <button id="okBtn" class="flex-1 px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400">🤔 保留</button>
+          <button id="yesBtn" class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">✅ 覚えた</button>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button id="prevBtn" class="flex-1 px-3 py-2 rounded-xl border border-slate-700 bg-slate-800">← 前へ</button>
+          <button id="nextBtn" class="flex-1 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">次へ →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 一覧テーブル -->
+    <section class="mt-6">
+      <h2 class="text-sm text-slate-300 mb-2">全問題一覧</h2>
+      <table class="w-full text-xs border border-slate-700">
+        <thead class="bg-slate-800">
+          <tr>
+            <th class="border border-slate-700 px-2 py-1">ID</th>
+            <th class="border border-slate-700 px-2 py-1">日本語</th>
+            <th class="border border-slate-700 px-2 py-1">英語</th>
+            <th class="border border-slate-700 px-2 py-1">状態</th>
+          </tr>
+        </thead>
+        <tbody id="listTable" class="divide-y divide-slate-800"></tbody>
+      </table>
+    </section>
+
+    <p class="mt-3 text-[11px] text-slate-400 text-center">画像・音声は /images /audio 配下を想定。data/items.json があれば自動読込。</p>
+  </main>
+
+  <audio id="player" preload="none"></audio>
+
+  <script>
+    const EMBED_ITEMS = [
+      { id: "001", image: "images/001.jpg", ja: "お水をもう一杯いただけますか？", en: "Could we get another glass of water, please?", audio: "audio/001.mp3" },
+      { id: "002", image: "images/002.jpg", ja: "ナプキンをもう少しいただけますか？", en: "Could we get some extra napkins, please?", audio: "audio/002.mp3" },
+      { id: "003", image: "images/003.jpg", ja: "デザートをテイクアウトにしてもらえますか？", en: "Could we get the dessert to go?", audio: "audio/003.mp3" }
+    ];
+
+    const STORAGE_KEY = "eimari_ic_v3";
+
+    const els = {
+      image: document.querySelector("#image"),
+      badge: document.querySelector("#badge"),
+      ja: document.querySelector("#ja"),
+      en: document.querySelector("#en"),
+      enWrap: document.querySelector("#enWrap"),
+      audioBtn: document.querySelector("#audioBtn"),
+      player: document.querySelector("#player"),
+      revealBtn: document.querySelector("#revealBtn"),
+      feedback: document.querySelector("#feedback"),
+      prevBtn: document.querySelector("#prevBtn"), nextBtn: document.querySelector("#nextBtn"),
+      yesBtn: document.querySelector("#yesBtn"), notBtn: document.querySelector("#notBtn"), okBtn: document.querySelector("#okBtn"),
+      progressBar: document.querySelector("#progressBar"), progressText: document.querySelector("#progressText"),
+      filterBtn: document.querySelector("#filterBtn"), holdBtn: document.querySelector("#holdBtn"),
+      listTable: document.querySelector("#listTable")
+    };
+
+    let state = { items: [], order: [], idx: 0, revealed: false, learned: {}, filter: false, holdMode: false };
+
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.learned)); }
+    function load() { state.learned = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+
+    async function loadItems() { return EMBED_ITEMS; }
+
+    function buildOrder() {
+      state.order = state.items.map((_,i)=>i);
+    }
+
+    function currentIndex() { return state.order[state.idx] ?? 0; }
+
+    function updateProgress() {
+      const total = state.items.length;
+      const learnedCount = Object.values(state.learned).filter(v => v === "yes").length;
+      els.progressBar.style.width = total ? `${Math.round((learnedCount/total)*100)}%` : "0%";
+      els.progressText.textContent = `${learnedCount} / ${total}`;
+      updateTable();
+    }
+
+    function render() {
+      const i = currentIndex();
+      const item = state.items[i];
+      if (!item) return;
+      els.badge.textContent = `#${state.idx+1}`;
+      els.image.src = item.image;
+      els.ja.textContent = item.ja;
+      els.en.textContent = item.en;
+      els.enWrap.classList.toggle("hidden", !state.revealed);
+      els.player.src = item.audio;
+      updateProgress();
+    }
+
+    function reveal() { state.revealed = true; els.enWrap.classList.remove("hidden"); playAudio(); }
+    function playAudio() { els.player.currentTime = 0; els.player.play().catch(()=>{}); }
+
+    function mark(status) {
+      const item = state.items[currentIndex()];
+      if (!item) return;
+      state.learned[item.id] = status;
+      save();
+      state.idx = Math.min(state.idx+1, state.order.length-1);
+      state.revealed = false;
+      render();
+    }
+
+    function updateTable() {
+      els.listTable.innerHTML = state.items.map(it=>{
+        let st = state.learned[it.id]||"未";
+        return `<tr><td class='border border-slate-700 px-2 py-1'>${it.id}</td><td class='border border-slate-700 px-2 py-1'>${it.ja}</td><td class='border border-slate-700 px-2 py-1'>${it.en}</td><td class='border border-slate-700 px-2 py-1'>${st}</td></tr>`;
+      }).join("");
+    }
+
+    els.revealBtn.addEventListener("click", reveal);
+    els.audioBtn.addEventListener("click", playAudio);
+    els.prevBtn.addEventListener("click", ()=>{ state.idx=Math.max(state.idx-1,0); render(); });
+    els.nextBtn.addEventListener("click", ()=>{ state.idx=Math.min(state.idx+1,state.order.length-1); render(); });
+    els.yesBtn.addEventListener("click", ()=>mark("yes"));
+    els.notBtn.addEventListener("click", ()=>mark("no"));
+    els.okBtn.addEventListener("click", ()=>mark("hold"));
+
+    els.filterBtn.addEventListener("click", ()=>{
+      state.filter=!state.filter;
+      if(state.filter){
+        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]!="yes");
+        els.filterBtn.textContent="✅全件表示";
+      } else { buildOrder(); els.filterBtn.textContent="❌未習得のみ"; }
+      state.idx=0; render();
+    });
+
+    els.holdBtn.addEventListener("click", ()=>{
+      state.holdMode=!state.holdMode;
+      if(state.holdMode){
+        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]==="hold");
+        els.holdBtn.textContent="全件表示";
+      } else { buildOrder(); els.holdBtn.textContent="🤔保留リスト"; }
+      state.idx=0; render();
+    });
+
+    (async function init(){
+      load();
+      state.items = await loadItems();
+      buildOrder();
+      render();
+    })();
+  </script>
+</body>
+</html>
