@@ -9,6 +9,7 @@
     html, body { height: 100%; background: #0b0f16; }
     .safe { padding-bottom: env(safe-area-inset-bottom); }
     .tap-highlight-none { -webkit-tap-highlight-color: transparent; }
+    .label-small { font-size: 10px; display:block; margin-top:2px; }
   </style>
 </head>
 <body class="min-h-screen text-slate-100 tap-highlight-none">
@@ -53,11 +54,17 @@
 
         <div id="feedback" class="text-sm"></div>
 
-        <!-- Buttons: 覚えた / 覚えてない / 保留 -->
-        <div class="flex items-center gap-2 pt-2">
-          <button id="notBtn" class="flex-1 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500">❌ わからない</button>
-          <button id="okBtn" class="flex-1 px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400">🤔 保留</button>
-          <button id="yesBtn" class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">✅ わかる</button>
+        <!-- Buttons -->
+        <div class="flex items-center gap-2 pt-2 text-center">
+          <button id="notBtn" class="flex-1 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500">
+            ❌<span class="label-small">わからない</span>
+          </button>
+          <button id="okBtn" class="flex-1 px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400">
+            🤔<span class="label-small">保留</span>
+          </button>
+          <button id="yesBtn" class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">
+            ✅<span class="label-small">わかる</span>
+          </button>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
@@ -88,8 +95,7 @@
 
   <script>
     const EMBED_ITEMS = [];
-
-    const STORAGE_KEY = "eimari_ic_v7";
+    const STORAGE_KEY = "eimari_ic_v8";
 
     const els = {
       image: document.querySelector("#image"),
@@ -100,7 +106,6 @@
       audioBtn: document.querySelector("#audioBtn"),
       player: document.querySelector("#player"),
       revealBtn: document.querySelector("#revealBtn"),
-      feedback: document.querySelector("#feedback"),
       prevBtn: document.querySelector("#prevBtn"), nextBtn: document.querySelector("#nextBtn"),
       yesBtn: document.querySelector("#yesBtn"), notBtn: document.querySelector("#notBtn"), okBtn: document.querySelector("#okBtn"),
       progressBar: document.querySelector("#progressBar"), progressText: document.querySelector("#progressText"),
@@ -168,25 +173,21 @@
 
     function updateTable() {
       els.listTable.innerHTML = state.items.map(it=>{
-        let st = state.learned[it.id]||"未";
-        if (st === "yes") st = "✅ わかる";
-        else if (st === "no") st = "❌ わからない";
-        else if (st === "hold") st = "🤔 保留";
+        let val = state.learned[it.id]||"";
         return `<tr>
           <td class='border border-slate-700 px-2 py-1'>${it.id}</td>
           <td class='border border-slate-700 px-2 py-1'>${it.ja}</td>
           <td class='border border-slate-700 px-2 py-1'>${it.en}</td>
-          <td class='border border-slate-700 px-2 py-1'>
-            <select data-id="${it.id}" class="bg-slate-800 border border-slate-700 rounded px-1">
-              <option value="">未</option>
-              <option value="yes">✅ わかる</option>
-              <option value="no">❌ わからない</option>
-              <option value="hold">🤔 保留</option>
+          <td class='border border-slate-700 px-2 py-1 text-center'>
+            <select data-id=\"${it.id}\" class=\"bg-slate-800 border border-slate-700 rounded px-1 text-center\">
+              <option value=\"\"></option>
+              <option value=\"no\">❌ わからない</option>
+              <option value=\"hold\">🤔 保留</option>
+              <option value=\"yes\">✅ わかる</option>
             </select>
           </td>
         </tr>`;
       }).join("");
-      // 状態反映
       document.querySelectorAll("#listTable select").forEach(sel=>{
         sel.value = state.learned[sel.dataset.id]||"";
         sel.addEventListener("change", e=>{
@@ -208,18 +209,18 @@
     els.filterBtn.addEventListener("click", ()=>{
       state.filter=!state.filter;
       if(state.filter){
-        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]!="yes");
-        els.filterBtn.textContent="✅全件表示";
-      } else { buildOrder(); els.filterBtn.textContent="❌未習得のみ"; }
+        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]!=\"yes\");
+        els.filterBtn.textContent=\"✅全件表示\";
+      } else { buildOrder(); els.filterBtn.textContent=\"❌未習得のみ\"; }
       state.idx=0; render();
     });
 
     els.holdBtn.addEventListener("click", ()=>{
       state.holdMode=!state.holdMode;
       if(state.holdMode){
-        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]==="hold");
-        els.holdBtn.textContent="全件表示";
-      } else { buildOrder(); els.holdBtn.textContent="🤔保留リスト"; }
+        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]===\"hold\");
+        els.holdBtn.textContent=\"全件表示\";
+      } else { buildOrder(); els.holdBtn.textContent=\"🤔保留リスト\"; }
       state.idx=0; render();
     });
 
