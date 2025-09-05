@@ -19,5 +19,68 @@
     "ja": "すみません、23番ゲートがどこか教えていただけますか？",
     "en": "Excuse me, could you tell me where Gate 23 is?",
     "audio": "audio/3.mp3"
+  },
+  {
+    "id": "004",
+    "image": "images/4.jpeg",
+    "ja": "すみません、ロサンゼルス行きに乗り継ぎなんですが、このゲートで合っていますか？",
+    "en": "Excuse me, I’m connecting to LA. Is this the right gate?",
+    "audio": "audio/4.mp3"
+  },
+  {
+    "id": "005",
+    "image": "images/5.jpeg",
+    "ja": "すみません、そこは私の席だと思うのですが… 24Cです。",
+    "en": "Excuse me, I think that’s my seat, 24C.",
+    "audio": "audio/5.mp3"
+  },
+  {
+    "id": "006",
+    "image": "images/6.jpeg",
+    "ja": "（飲み物は）何がありますか？",
+    "en": "What do you have?",
+    "audio": "audio/6.mp3"
+  },
+  {
+    "id": "007",
+    "image": "images/7.jpeg",
+    "ja": "オレンジジュースを頂きます。",
+    "en": "I’ll have an orange juice, please.",
+    "audio": "audio/7.mp3"
+  },
+  {
+    "id": "008",
+    "image": "images/8.jpeg",
+    "ja": "すみません、ちょっと肌寒いのですが、毛布はございますか？",
+    "en": "Excuse me, it’s a little chilly. Would you happen to have a blanket?",
+    "audio": "audio/8.mp3"
+  },
+  {
+    "id": "009",
+    "image": "images/9.jpeg",
+    "ja": "こんにちは、機内にiPadを忘れたと思うのですが、ひょっとしてどなたか見つけてくれていたりしますか？",
+    "en": "Hi, I think I left my iPad on the plane. Do you know if someone found it by any chance?",
+    "audio": "audio/9.mp3"
+  },
+  {
+    "id": "010",
+    "image": "images/10.jpeg",
+    "ja": "【What’s the purpose of your visit?の返事として】休暇で来ました。",
+    "en": "I'm here on vacation.",
+    "audio": "audio/10.mp3"
+  },
+  {
+    "id": "011",
+    "image": "images/11.jpeg",
+    "ja": "【How long do you intend to stay?の返事として】7日間いる予定です。",
+    "en": "I’ll be here for seven days.",
+    "audio": "audio/11.mp3"
+  },
+  {
+    "id": "012",
+    "image": "images/12.jpeg",
+    "ja": "【Where will you be staying?の返事として】ロサンゼルス・ダウンタウンのヒルトンホテルに泊まります。",
+    "en": "I’ll be at the Hilton Hotel, Downtown L.A.",
+    "audio": "audio/12.mp3"
   }
 ]
