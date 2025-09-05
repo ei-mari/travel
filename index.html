@@ -94,9 +94,7 @@
   <audio id="player" preload="none"></audio>
 
   <script>
-    const EMBED_ITEMS = [];
-    const STORAGE_KEY = "eimari_ic_v8";
-
+    const STORAGE_KEY = "eimari_ic_v9";
     const els = {
       image: document.querySelector("#image"),
       badge: document.querySelector("#badge"),
@@ -119,14 +117,12 @@
     function load() { state.learned = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
 
     async function loadItems() {
-      try {
-        const res = await fetch("data.json", { cache: "no-store" });
-        if (res.ok) {
-          const arr = await res.json();
-          if (Array.isArray(arr) && arr.length) return arr;
-        }
-      } catch {}
-      return EMBED_ITEMS;
+      const res = await fetch("data.json", { cache: "no-store" });
+      if (res.ok) {
+        const arr = await res.json();
+        if (Array.isArray(arr) && arr.length) return arr;
+      }
+      return [];
     }
 
     function buildOrder() { state.order = state.items.map((_,i)=>i); }
@@ -141,11 +137,12 @@
     }
 
     function render() {
+      if (!state.items.length) return;
       const i = currentIndex();
       const item = state.items[i];
       if (!item) return;
       els.badge.textContent = `#${state.idx+1}`;
-      els.image.src = item.image;
+      els.image.src = item.image || "images/NI.jpeg";
       els.ja.textContent = item.ja;
       els.en.textContent = item.en;
       els.enWrap.classList.toggle("hidden", !state.revealed);
@@ -173,17 +170,17 @@
 
     function updateTable() {
       els.listTable.innerHTML = state.items.map(it=>{
-        let val = state.learned[it.id]||"";
-        return `<tr>
-          <td class='border border-slate-700 px-2 py-1'>${it.id}</td>
-          <td class='border border-slate-700 px-2 py-1'>${it.ja}</td>
-          <td class='border border-slate-700 px-2 py-1'>${it.en}</td>
-          <td class='border border-slate-700 px-2 py-1 text-center'>
-            <select data-id=\"${it.id}\" class=\"bg-slate-800 border border-slate-700 rounded px-1 text-center\">
-              <option value=\"\"></option>
-              <option value=\"no\">❌ わからない</option>
-              <option value=\"hold\">🤔 保留</option>
-              <option value=\"yes\">✅ わかる</option>
+        return `
+        <tr>
+          <td class="border border-slate-700 px-2 py-1">${it.id}</td>
+          <td class="border border-slate-700 px-2 py-1">${it.ja}</td>
+          <td class="border border-slate-700 px-2 py-1">${it.en}</td>
+          <td class="border border-slate-700 px-2 py-1 text-center">
+            <select data-id="${it.id}" class="bg-slate-800 border border-slate-700 rounded px-1 text-center">
+              <option value=""></option>
+              <option value="no">❌ わからない</option>
+              <option value="hold">🤔 保留</option>
+              <option value="yes">✅ わかる</option>
             </select>
           </td>
         </tr>`;
@@ -198,6 +195,7 @@
       });
     }
 
+    // イベントバインド
     els.revealBtn.addEventListener("click", toggleReveal);
     els.audioBtn.addEventListener("click", playAudio);
     els.prevBtn.addEventListener("click", ()=>{ state.idx=Math.max(state.idx-1,0); render(); });
@@ -209,18 +207,18 @@
     els.filterBtn.addEventListener("click", ()=>{
       state.filter=!state.filter;
       if(state.filter){
-        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]!=\"yes\");
-        els.filterBtn.textContent=\"✅全件表示\";
-      } else { buildOrder(); els.filterBtn.textContent=\"❌未習得のみ\"; }
+        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]!=="yes");
+        els.filterBtn.textContent="✅全件表示";
+      } else { buildOrder(); els.filterBtn.textContent="❌未習得のみ"; }
       state.idx=0; render();
     });
 
     els.holdBtn.addEventListener("click", ()=>{
       state.holdMode=!state.holdMode;
       if(state.holdMode){
-        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]===\"hold\");
-        els.holdBtn.textContent=\"全件表示\";
-      } else { buildOrder(); els.holdBtn.textContent=\"🤔保留リスト\"; }
+        state.order = state.items.map((_,i)=>i).filter(i=>state.learned[state.items[i].id]==="hold");
+        els.holdBtn.textContent="全件表示";
+      } else { buildOrder(); els.holdBtn.textContent="🤔保留リスト"; }
       state.idx=0; render();
     });
 
