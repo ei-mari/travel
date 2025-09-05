@@ -40,7 +40,7 @@
         <p id="ja" class="text-base leading-relaxed"></p>
 
         <div class="flex items-center gap-2">
-          <button id="revealBtn" class="flex-1 text-center px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">英語を表示</button>
+          <button id="revealBtn" class="flex-1 text-center px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">英語を表示 / 非表示</button>
           <button id="audioBtn" class="px-3 py-2 rounded-xl border border-slate-700 bg-slate-800">音声</button>
         </div>
 
@@ -55,9 +55,9 @@
 
         <!-- Buttons: 覚えた / 覚えてない / 保留 -->
         <div class="flex items-center gap-2 pt-2">
-          <button id="notBtn" class="flex-1 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500">❌ 覚えてない</button>
+          <button id="notBtn" class="flex-1 px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500">❌ わからない</button>
           <button id="okBtn" class="flex-1 px-3 py-2 rounded-xl bg-yellow-500 hover:bg-yellow-400">🤔 保留</button>
-          <button id="yesBtn" class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">✅ 覚えた</button>
+          <button id="yesBtn" class="flex-1 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">✅ わかる</button>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
@@ -82,8 +82,6 @@
         <tbody id="listTable" class="divide-y divide-slate-800"></tbody>
       </table>
     </section>
-
-    <p class="mt-3 text-[11px] text-slate-400 text-center">画像・音声は /images /audio 配下を想定。data.json があれば自動読込。画像が無い場合は NI.jpeg を表示。</p>
   </main>
 
   <audio id="player" preload="none"></audio>
@@ -91,7 +89,7 @@
   <script>
     const EMBED_ITEMS = [];
 
-    const STORAGE_KEY = "eimari_ic_v5";
+    const STORAGE_KEY = "eimari_ic_v7";
 
     const els = {
       image: document.querySelector("#image"),
@@ -150,7 +148,12 @@
       updateProgress();
     }
 
-    function reveal() { state.revealed = true; els.enWrap.classList.remove("hidden"); playAudio(); }
+    function toggleReveal() {
+      state.revealed = !state.revealed;
+      els.enWrap.classList.toggle("hidden", !state.revealed);
+      if (state.revealed) playAudio();
+    }
+
     function playAudio() { els.player.currentTime = 0; els.player.play().catch(()=>{}); }
 
     function mark(status) {
@@ -166,11 +169,35 @@
     function updateTable() {
       els.listTable.innerHTML = state.items.map(it=>{
         let st = state.learned[it.id]||"未";
-        return `<tr><td class='border border-slate-700 px-2 py-1'>${it.id}</td><td class='border border-slate-700 px-2 py-1'>${it.ja}</td><td class='border border-slate-700 px-2 py-1'>${it.en}</td><td class='border border-slate-700 px-2 py-1'>${st}</td></tr>`;
+        if (st === "yes") st = "✅ わかる";
+        else if (st === "no") st = "❌ わからない";
+        else if (st === "hold") st = "🤔 保留";
+        return `<tr>
+          <td class='border border-slate-700 px-2 py-1'>${it.id}</td>
+          <td class='border border-slate-700 px-2 py-1'>${it.ja}</td>
+          <td class='border border-slate-700 px-2 py-1'>${it.en}</td>
+          <td class='border border-slate-700 px-2 py-1'>
+            <select data-id="${it.id}" class="bg-slate-800 border border-slate-700 rounded px-1">
+              <option value="">未</option>
+              <option value="yes">✅ わかる</option>
+              <option value="no">❌ わからない</option>
+              <option value="hold">🤔 保留</option>
+            </select>
+          </td>
+        </tr>`;
       }).join("");
+      // 状態反映
+      document.querySelectorAll("#listTable select").forEach(sel=>{
+        sel.value = state.learned[sel.dataset.id]||"";
+        sel.addEventListener("change", e=>{
+          state.learned[sel.dataset.id] = sel.value;
+          save();
+          updateProgress();
+        });
+      });
     }
 
-    els.revealBtn.addEventListener("click", reveal);
+    els.revealBtn.addEventListener("click", toggleReveal);
     els.audioBtn.addEventListener("click", playAudio);
     els.prevBtn.addEventListener("click", ()=>{ state.idx=Math.max(state.idx-1,0); render(); });
     els.nextBtn.addEventListener("click", ()=>{ state.idx=Math.min(state.idx+1,state.order.length-1); render(); });
