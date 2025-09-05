@@ -1,0 +1,23 @@
+[
+  {
+    "id": "001",
+    "image": "images/1.jpg",
+    "ja": "えっ、本当ですか？超過料金はいくらですか？",
+    "en": "Oh, really? How much is the overweight fee?",
+    "audio": "audio/1.mp3"
+  },
+  {
+    "id": "002",
+    "image": "images/2.jpg",
+    "ja": "これは機内に持ち込めますか？",
+    "en": "Can this be my carry-on?",
+    "audio": "audio/2.mp3"
+  },
+  {
+    "id": "003",
+    "image": "images/3.jpg",
+    "ja": "すみません、23番ゲートがどこか教えていただけますか？",
+    "en": "Excuse me, could you tell me where Gate 23 is?",
+    "audio": "audio/3.mp3"
+  }
+]
